@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>UseStateRef</title>
+    <link rel='stylesheet' href='https://codepen.io/GreenSock/pen/xxmzBrw.css'>
+    <style>
+        .app {
+            padding: 10px;
+        }
+
+        .box {
+            margin: 10px 0;
+        }
+    </style>
+
+</head>
+
+<body>
+    <div id="root" class="panel center text-center"></div>
+    <script src='https://codepen.io/GreenSock/pen/NWoLXRG.js'></script>
+    <script>
+        import React, {
+            useLayoutEffect, useRef, useState, useCallback
+        } from
+            "https://esm.sh/react@19.1.0";
+        import ReactDOM from "https://esm.sh/react-dom@19.1.0/client";
+        import gsap from "https://esm.sh/gsap";
+        import { useGSAP } from "https://esm.sh/@gsap/react?deps=react@19.1.0";
+
+        gsap.registerPlugin(useGSAP);
+
+        console.clear();
+
+        function useStateRef(defaultValue) {
+            const [state, setState] = useState(defaultValue);
+            const ref = useRef(state);
+
+            const dispatch = useCallback(value => {
+                ref.current = typeof value === "function" ? value(ref.current) : value;
+                setState(ref.current);
+            }, []);
+
+            return [state, dispatch, ref];
+        }
+
+        function App() {
+            const app = useRef();
+            const [count, setCount, countRef] = useStateRef(5);
+            const [gsapCount, setGsapCount] = useState(0);
+
+            useGSAP(() => {
+                gsap.to(".box", {
+                    x: 200,
+                    duration: 1,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "none",
+                    onRepeat: () => setGsapCount(countRef.current)
+                });
+
+            }, {
+                scope: app
+            });
+
+
+            return /*#__PURE__*/(
+                React.createElement("div", { className: "app", ref: app }, /*#__PURE__*/
+                    React.createElement("div", null, /*#__PURE__*/
+                        React.createElement("button", { onClick: () => setCount(count + 1) }, "Click Me")), /*#__PURE__*/
+
+                    React.createElement("p", null, "Count: ", count), /*#__PURE__*/
+                    React.createElement("p", null, "GSAP Count: ", gsapCount), /*#__PURE__*/
+                    React.createElement("div", { className: "box gradient-blue" }, "Box")));
+
+
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render( /*#__PURE__*/React.createElement(App, null));
+    </script>
+
+</body>
+
+</html>
